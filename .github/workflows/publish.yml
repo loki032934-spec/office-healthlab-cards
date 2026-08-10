@@ -1,0 +1,47 @@
+name: 카드뉴스 자동 게시
+
+on:
+  schedule:
+    # UTC 기준. 22:30~00:45 UTC = 한국시간 07:30~09:45 (15분 간격)
+    - cron: '30,45 22 * * *'
+    - cron: '0,15,30,45 23 * * *'
+    - cron: '0,15,30,45 0 * * *'
+  workflow_dispatch:            # 즉시 게시 버튼 — 폰에서도 탭 한 번이면 실행
+    inputs:
+      dry_run:
+        description: '렌더링만 하고 게시는 하지 않기'
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: 의존성 설치
+        run: |
+          npm ci --no-fund --no-audit || npm i --no-fund --no-audit
+          npx playwright install --with-deps chromium
+
+      - name: 한글 폰트 폴백 설치
+        run: sudo apt-get install -y fonts-noto-cjk || true
+
+      - name: 게시 실행
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '0' }}
+        run: node scripts/publish.js
