@@ -1,0 +1,12 @@
+{
+  "name": "office-healthlab-cards",
+  "version": "1.0.0",
+  "private": true,
+  "description": "오피스 헬스랩 카드뉴스 자동 렌더링 + 인스타그램 게시",
+  "scripts": {
+    "publish-cards": "node scripts/publish.js"
+  },
+  "dependencies": {
+    "playwright": "1.49.0"
+  }
+}
